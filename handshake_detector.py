@@ -2,7 +2,7 @@ import time
 from enum import Enum
 
 
-class MovementStatus(Enum):
+class HandshakeStatus(Enum):
     # Hand is currently shaking
     SHAKING = 2
 
@@ -99,10 +99,10 @@ class HandshakeDetector:
         """
         Calculates hand shaking status using the second derivative (acceleration)
         """
-        handshake_status = MovementStatus.STEADY
+        handshake_status = HandshakeStatus.STEADY
 
         if self.movement_score_percent > self._movement_score_percent_threshold:
-            handshake_status = MovementStatus.SHAKING
+            handshake_status = HandshakeStatus.SHAKING
 
         self.debug(f"handshake_status: {handshake_status}")
         return handshake_status

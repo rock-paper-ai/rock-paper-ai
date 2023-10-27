@@ -3,98 +3,141 @@ import cvzone
 from cvzone.HandTrackingModule import HandDetector
 import time
 import random
+
+from handshake_detector import HandshakeDetector, HandshakeStatus
 # install: cv2, cvzone, mediapipe, protobuf version 3.20.0
 
-cv2.namedWindow("preview")
-vc = cv2.VideoCapture(0)
-vc.set(3,640)
-vc.set(4,480)
-
-detector = HandDetector(maxHands=1)
-
-timer = 0
-showResult = False
-gameStarted = False
-scores = [0,0]
 possibleMoves = ['Rock', 'Paper', 'Scissors']
-# success, img = vc.read()
+detector = HandDetector(maxHands=1)
+scores = [0, 0]
 
-while True:
-    imgBG = cv2.imread('resources/BG.png') # background
 
-    success, img = vc.read()
-    #if img is not None:
-    imgScaled = cv2.resize(img, (0, 0), None, 0.875, 0.875) #calculate the resize amount for the square in your design
-    imgScaled = imgScaled[:, 80:480] #crop so that it fits to the box
+def get_player_move(hands):
+    player_move = None
+    hand = hands[0]
+    fingers = detector.fingersUp(hand)
+    print(f"player fingers: {fingers}")
 
-    # find hands
-    hands, img = detector.findHands(imgScaled)
-    if gameStarted:
-        if showResult is False:
-            timer = time.time() - startTime
-            cv2.putText(imgBG, str(int(timer)), (605, 435), cv2.FONT_HERSHEY_PLAIN, 6, (255, 0, 255), 4)
+    # todo find better
+    if fingers == [0, 0, 0, 0, 0] or fingers == [1, 0, 0, 0, 0] or fingers == [0, 0, 0, 0, 1]:  # if Rock
+        player_move = 1
+    if fingers == [1, 1, 1, 1, 1]:  # if Paper
+        player_move = 2
+    if fingers == [0, 1, 1, 0, 0] or fingers == [0, 1, 1, 1, 1]:  # if Scissors
+        player_move = 3
 
-            if timer > 3:
-                showResult=True
-                timer = 0
-                if hands:
-                    movePlayer = None
-                    hand = hands[0]
-                    fingers = detector.fingersUp(hand)
-                    print(fingers)
-                    #todo find better
-                    if fingers == [0,0,0,0,0] or fingers == [1,0,0,0,0] or fingers == [0,0,0,0,1]: # if Rock
-                        movePlayer = 1
-                    if fingers == [1,1,1,1,1]: # if Paper
-                        movePlayer = 2
-                    if fingers == [0,1,1,0,0] or fingers == [0,1,1,1,1] : # if Scissors
-                        movePlayer = 3
-                    if movePlayer is not None:
-                        print(possibleMoves[movePlayer-1])
+    if player_move is not None:
+        print(f"player move: {possibleMoves[player_move-1]}")
 
-                        randomNumber = random.randint(1, 3)
-                        imgAI = cv2.imread(f'Resources/{randomNumber}.png', cv2.IMREAD_UNCHANGED)
-                        imgBG = cvzone.overlayPNG(imgBG, imgAI, (149, 310))
+    return player_move
 
-                        # Player Wins
-                        if (movePlayer == 1 and randomNumber == 3) or \
-                                (movePlayer == 2 and randomNumber == 1) or \
-                                (movePlayer == 3 and randomNumber == 2):
-                            scores[1] += 1
 
-                        # AI Wins
-                        if (movePlayer == 3 and randomNumber == 1) or \
-                                (movePlayer == 1 and randomNumber == 2) or \
-                                (movePlayer == 2 and randomNumber == 3):
-                            scores[0] += 1
-                        #print(scores)
+def do_ai_move(player_move):
+    ai_move = random.randint(1, 3)
+    print(f"AI move: {ai_move}")
+    return ai_move
 
-                    else:
-                        #todo fix the icon and show error message
 
-                        imgAI = cv2.imread(f'Resources/error.png', cv2.IMREAD_UNCHANGED)
-                        print('Could not recognise your move!')
+def update_move_ui(playboard, player_move, ai_move):
+    if player_move is None:
+        # todo fix the icon and show error message
 
-    #if img is not None:
-    imgBG[234:654, 795:1195] = imgScaled #put the exact pixels you want to embed the video
+        ai_move_image = cv2.imread(f'resources/error.png', cv2.IMREAD_UNCHANGED)
+        print('Could not recognise your move!')
 
-    if showResult:
-        imgBG = cvzone.overlayPNG(imgBG, imgAI, (149, 310))
+    ai_move_image = cv2.imread(f'resources/{ai_move}.png', cv2.IMREAD_UNCHANGED)
+    playboard = cvzone.overlayPNG(playboard, ai_move_image, (149, 310))
+    return playboard
 
-    cv2.putText(imgBG, str(scores[0]), (410, 215), cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
-    cv2.putText(imgBG, str(scores[1]), (1112, 215), cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
-    #cv2.putText(imgBG, str(possibleMoves[movePlayer+1]), (1112, 200), cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
 
-    #if img is not None:
-    #cv2.imshow("image", img)
-    cv2.imshow('BG', imgBG)
-    #cv2.imshow('imgScaled', imgScaled)
+def update_scores(player_move, ai_move):
+    # Player Wins
+    if (player_move == 1 and ai_move == 3) or \
+            (player_move == 2 and ai_move == 1) or \
+            (player_move == 3 and ai_move == 2):
+        scores[1] += 1
 
-    key = cv2.waitKey(1)
-    if key == ord('s'): #start the game when pressed s
-        gameStarted = True
-        startTime = time.time()
-        showResult = False
+    # AI Wins
+    if (player_move == 3 and ai_move == 1) or \
+            (player_move == 1 and ai_move == 2) or \
+            (player_move == 2 and ai_move == 3):
+        scores[0] += 1
+    # print(scores)
+
+def update_score_ui(playboard):
+
+    #if showResult:
+     #       imgBG = cvzone.overlayPNG(imgBG, imgAI, (149, 310))
+
+    cv2.putText(playboard, str(scores[0]), (410, 215),
+                cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
+    cv2.putText(playboard, str(scores[1]), (1112, 215),
+                cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
+    return playboard
+
+def main():
+    cv2.namedWindow("preview")
+    vc = cv2.VideoCapture(0)
+    vc.set(3, 640)
+    vc.set(4, 480)
+
     # success, img = vc.read()
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+
+    game_started = True # TODO allow setting to false using UI
+    player_is_shaking = False
+
+    handshake_detector = HandshakeDetector()
+
+    while True:
+        playboard = cv2.imread('resources/BG.png')  # background
+
+        success, img = vc.read()
+        # if img is not None:
+        # calculate the resize amount for the square in your design
+        imgScaled = cv2.resize(img, (0, 0), None, 0.875, 0.875)
+        imgScaled = imgScaled[:, 80:480]  # crop so that it fits to the box
+
+        # find hands
+        hands, img = detector.findHands(imgScaled)
+        if game_started:
+            if hands:
+                handshake_detector.calculate_movement_score(hands[0])
+
+                handshake_status = handshake_detector.get_hand_shaking_status()
+                print(f"handshake_status: {handshake_status}")
+
+                if player_is_shaking and handshake_status == HandshakeStatus.STEADY:
+                    # Player finished shaking
+                    player_is_shaking = False
+                    
+                    player_move = get_player_move(hands)
+                    ai_move = do_ai_move(player_move)
+                    playboard = update_move_ui(playboard, player_move, ai_move)
+                    update_scores(player_move, ai_move)
+                    playboard=update_score_ui(playboard)
+
+                if not player_is_shaking and handshake_status == HandshakeStatus.SHAKING:
+                    player_is_shaking = True
+
+            else:
+                handshake_detector.calculate_movement_score(None)
+
+        # if img is not None:
+        # put the exact pixels you want to embed the video
+        playboard[234:654, 795:1195] = imgScaled
+
+        playboard = update_score_ui(playboard)
+        # cv2.putText(imgBG, str(possibleMoves[player_move+1]), (1112, 200), cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
+
+        # if img is not None:
+        # cv2.imshow("image", img)
+        cv2.imshow('BG', playboard)
+        # cv2.imshow('imgScaled', imgScaled)
+
+        # success, img = vc.read()
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+
+if __name__ == "__main__":
+    main()
