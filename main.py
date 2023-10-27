@@ -42,32 +42,38 @@ while True:
                     hand = hands[0]
                     fingers = detector.fingersUp(hand)
                     print(fingers)
-                    if fingers == [0,0,0,0,0]: # if Rock
+                    #todo find better
+                    if fingers == [0,0,0,0,0] or fingers == [1,0,0,0,0] or fingers == [0,0,0,0,1]: # if Rock
                         movePlayer = 1
                     if fingers == [1,1,1,1,1]: # if Paper
                         movePlayer = 2
-                    if fingers == [0,1,1,0,0]: # if Scissors
+                    if fingers == [0,1,1,0,0] or fingers == [0,1,1,1,1] : # if Scissors
                         movePlayer = 3
-                    #todo add else: 'unvalid move!!'
                     if movePlayer is not None:
-                        print(str(possibleMoves[movePlayer-1]))
+                        print(possibleMoves[movePlayer-1])
 
-                    randomNumber = random.randint(1, 3)
-                    imgAI = cv2.imread(f'Resources/{randomNumber}.png', cv2.IMREAD_UNCHANGED)
-                    imgBG = cvzone.overlayPNG(imgBG, imgAI, (149, 310))
+                        randomNumber = random.randint(1, 3)
+                        imgAI = cv2.imread(f'Resources/{randomNumber}.png', cv2.IMREAD_UNCHANGED)
+                        imgBG = cvzone.overlayPNG(imgBG, imgAI, (149, 310))
 
-                    # Player Wins
-                    if (movePlayer == 1 and randomNumber == 3) or \
-                            (movePlayer == 2 and randomNumber == 1) or \
-                            (movePlayer == 3 and randomNumber == 2):
-                        scores[1] += 1
+                        # Player Wins
+                        if (movePlayer == 1 and randomNumber == 3) or \
+                                (movePlayer == 2 and randomNumber == 1) or \
+                                (movePlayer == 3 and randomNumber == 2):
+                            scores[1] += 1
 
-                    # AI Wins
-                    if (movePlayer == 3 and randomNumber == 1) or \
-                            (movePlayer == 1 and randomNumber == 2) or \
-                            (movePlayer == 2 and randomNumber == 3):
-                        scores[0] += 1
-                    print(scores)
+                        # AI Wins
+                        if (movePlayer == 3 and randomNumber == 1) or \
+                                (movePlayer == 1 and randomNumber == 2) or \
+                                (movePlayer == 2 and randomNumber == 3):
+                            scores[0] += 1
+                        #print(scores)
+
+                    else:
+                        #todo fix the icon and show error message
+
+                        imgAI = cv2.imread(f'Resources/error.png', cv2.IMREAD_UNCHANGED)
+                        print('Could not recognise your move!')
 
     #if img is not None:
     imgBG[234:654, 795:1195] = imgScaled #put the exact pixels you want to embed the video
