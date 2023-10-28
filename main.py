@@ -1,3 +1,4 @@
+from enum import Enum
 import cv2
 import cvzone
 from cvzone.HandTrackingModule import HandDetector
@@ -21,10 +22,12 @@ def get_player_move(hands):
     # todo find better
     if fingers == [0, 0, 0, 0, 0] or fingers == [1, 0, 0, 0, 0] or fingers == [0, 0, 0, 0, 1]:  # if Rock
         player_move = 1
-    if fingers == [1, 1, 1, 1, 1]:  # if Paper
+    elif fingers == [1, 1, 1, 1, 1]:  # if Paper
         player_move = 2
-    if fingers == [0, 1, 1, 0, 0] or fingers == [0, 1, 1, 1, 1]:  # if Scissors
+    elif fingers == [0, 1, 1, 0, 0] or fingers == [0, 1, 1, 1, 1]:  # if Scissors
         player_move = 3
+    else:
+        player_move = -1 # Unrecognized
 
     if player_move is not None:
         print(f"player move: {possibleMoves[player_move-1]}")
@@ -39,14 +42,15 @@ def do_ai_move(player_move):
 
 
 def update_move_ui(playboard, player_move, ai_move):
-    if player_move is None:
+    if player_move is -1:
         # todo fix the icon and show error message
 
         ai_move_image = cv2.imread(f'resources/error.png', cv2.IMREAD_UNCHANGED)
         print('Could not recognise your move!')
 
-    ai_move_image = cv2.imread(f'resources/{ai_move}.png', cv2.IMREAD_UNCHANGED)
-    playboard = cvzone.overlayPNG(playboard, ai_move_image, (149, 310))
+    if ai_move is not None:
+        ai_move_image = cv2.imread(f'resources/{ai_move}.png', cv2.IMREAD_UNCHANGED)
+        playboard = cvzone.overlayPNG(playboard, ai_move_image, (149, 310))
     return playboard
 
 
@@ -75,6 +79,12 @@ def update_score_ui(playboard):
                 cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
     return playboard
 
+class GameStatus(Enum):
+    NOT_RUNNING = 1
+    RUNNING_WAITING_FOR_SHAKE_BEGIN = 2
+    RUNNING_SHAKING = 3
+    RUNNING_SHOWING_RESULT = 4
+
 def main():
     cv2.namedWindow("preview")
     vc = cv2.VideoCapture(0)
@@ -83,10 +93,12 @@ def main():
 
     # success, img = vc.read()
 
-    game_started = True # TODO allow setting to false using UI
-    player_is_shaking = False
+    game_status = GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN
 
     handshake_detector = HandshakeDetector()
+
+    player_move = None
+    ai_move = None
 
     while True:
         playboard = cv2.imread('resources/BG.png')  # background
@@ -99,16 +111,16 @@ def main():
 
         # find hands
         hands, img = detector.findHands(imgScaled)
-        if game_started:
+        if game_status != GameStatus.NOT_RUNNING:
             if hands:
                 handshake_detector.calculate_movement_score(hands[0])
 
                 handshake_status = handshake_detector.get_hand_shaking_status()
                 print(f"handshake_status: {handshake_status}")
 
-                if player_is_shaking and handshake_status == HandshakeStatus.STEADY:
+                if game_status == GameStatus.RUNNING_SHAKING and handshake_status == HandshakeStatus.STEADY:
                     # Player finished shaking
-                    player_is_shaking = False
+                    game_status = GameStatus.RUNNING_SHOWING_RESULT
                     
                     player_move = get_player_move(hands)
                     ai_move = do_ai_move(player_move)
@@ -116,11 +128,22 @@ def main():
                     update_scores(player_move, ai_move)
                     playboard=update_score_ui(playboard)
 
-                if not player_is_shaking and handshake_status == HandshakeStatus.SHAKING:
-                    player_is_shaking = True
+                elif (game_status == GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN and handshake_status == HandshakeStatus.SHAKING):
+                    game_status = GameStatus.RUNNING_SHAKING
 
+                elif game_status == GameStatus.RUNNING_SHOWING_RESULT:
+                    # TODO wait for user input, and then reset the player_move and ai_move variables and then set status to WAITING_FOR_SHAKE_BEGIN
+                    pass
+                    
             else:
                 handshake_detector.calculate_movement_score(None)
+
+            print(f"game_status: {game_status}")
+
+            # Update UI
+            playboard = update_move_ui(playboard, player_move, ai_move)
+            playboard = update_score_ui(playboard)
+
 
         # if img is not None:
         # put the exact pixels you want to embed the video
