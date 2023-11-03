@@ -8,6 +8,13 @@ import random
 from handshake_detector import HandshakeDetector, HandshakeStatus
 # install: cv2, cvzone, mediapipe, protobuf version 3.20.0
 
+class AiAlgorithmStrategy(Enum):
+    RANDOM = 1
+    SOMETIMES_CHEAT = 2
+    MARKOV_CHAIN = 3
+
+AI_ALGORITHM_STRATEGY = AiAlgorithmStrategy.SOMETIMES_CHEAT
+
 class Move(Enum):
     ROCK = 0
     PAPER = 1
@@ -33,7 +40,25 @@ def get_player_move(hands, hand_detector) -> Move:
 
 
 def do_ai_move(player_move) -> Move:
-    ai_move = random.choice(list(Move))
+    if AI_ALGORITHM_STRATEGY == AiAlgorithmStrategy.RANDOM:
+        ai_move = random.choice(list(Move))
+
+    elif AI_ALGORITHM_STRATEGY == AiAlgorithmStrategy.SOMETIMES_CHEAT:
+        do_cheat = random.random() < 0.2
+        if do_cheat:
+            if player_move == Move.ROCK:
+                ai_move = Move.PAPER
+            elif player_move == Move.PAPER:
+                ai_move = Move.SCISSORS
+            elif player_move == Move.SCISSORS:
+                ai_move = Move.ROCK
+        else:
+            # Fair play
+            ai_move = random.choice(list(Move))
+
+    else:
+        raise NotImplementedError()
+
     print(f"AI move: {ai_move}")
     return ai_move
 
