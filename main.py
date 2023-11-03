@@ -42,7 +42,7 @@ def do_ai_move(player_move):
 
 
 def update_move_ui(playboard, player_move, ai_move):
-    if player_move is -1:
+    if player_move == -1:
         # todo fix the icon and show error message
 
         ai_move_image = cv2.imread(f'resources/error.png', cv2.IMREAD_UNCHANGED)
