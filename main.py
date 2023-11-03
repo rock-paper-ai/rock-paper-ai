@@ -87,6 +87,9 @@ def update_game_status_text(playboard, game_status):
     elif game_status == GameStatus.RUNNING_SHOWING_RESULT:
         cv2.putText(playboard, "Press any key to continue", (410, 215),
                     cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
+    elif game_status == GameStatus.RUNNING_SHAKE_DONE_INVALID_PLAYER_MOVE:
+        cv2.putText(playboard, "Did not recognize your move. Press any key to continue", (410, 215),
+                    cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
     elif game_status == GameStatus.NOT_RUNNING:
         cv2.putText(playboard, "Press any key to start", (410, 215),
                     cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
@@ -97,6 +100,7 @@ class GameStatus(Enum):
     RUNNING_WAITING_FOR_SHAKE_BEGIN = 2
     RUNNING_SHAKING = 3
     RUNNING_SHOWING_RESULT = 4
+    RUNNING_SHAKE_DONE_INVALID_PLAYER_MOVE = 5
 
 def main():
     cv2.namedWindow("preview")
@@ -133,16 +137,20 @@ def main():
 
                 if game_status == GameStatus.RUNNING_SHAKING and handshake_status == HandshakeStatus.STEADY:
                     # Player finished shaking
-                    game_status = GameStatus.RUNNING_SHOWING_RESULT
                     
                     player_move = get_player_move(hands, hand_detector)
-                    ai_move = do_ai_move(player_move)
-                    scores = update_scores(player_move, ai_move, scores)
+                    if player_move == -1:
+                        game_status = GameStatus.RUNNING_SHAKE_DONE_INVALID_PLAYER_MOVE
+                    else:
+                        game_status = GameStatus.RUNNING_SHOWING_RESULT
+                        ai_move = do_ai_move(player_move)
+                        scores = update_scores(player_move, ai_move, scores)
 
                 elif (game_status == GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN and handshake_status == HandshakeStatus.SHAKING):
                     game_status = GameStatus.RUNNING_SHAKING
 
-                elif game_status == GameStatus.RUNNING_SHOWING_RESULT:
+                elif game_status == GameStatus.RUNNING_SHOWING_RESULT or \
+                    game_status == GameStatus.RUNNING_SHAKE_DONE_INVALID_PLAYER_MOVE:
                     cv2.waitKey(0) # Wait for any key to be pressed, freeze the output window
                     game_status = GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN
                     ai_move = None
