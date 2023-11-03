@@ -68,9 +68,9 @@ def update_scores(player_move, ai_move, scores):
     return scores
 
 def update_score_ui(playboard, scores):
-    cv2.putText(playboard, str(scores[0]), (575, 410),
+    cv2.putText(playboard, f"{scores[0]:02d}", (550, 410),
                 cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
-    cv2.putText(playboard, str(scores[1]), (673, 410),
+    cv2.putText(playboard, f"{scores[1]:02d}", (655, 410),
                 cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
     return playboard
 
@@ -85,7 +85,7 @@ def update_game_status_text(playboard, game_status):
 
     elif game_status == GameStatus.RUNNING_SHAKE_DONE_INVALID_PLAYER_MOVE:
         cv2.putText(playboard, "Did not recognize your move. Press any key to continue.", (200, 697),
-                    cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 2)
+                    cv2.FONT_HERSHEY_PLAIN, 2, (32, 212, 254), 2)
     elif game_status == GameStatus.NOT_RUNNING:
         cv2.putText(playboard, "Press any key to start the game!", (385, 697),
                     cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 2)
