@@ -9,14 +9,11 @@ from handshake_detector import HandshakeDetector, HandshakeStatus
 # install: cv2, cvzone, mediapipe, protobuf version 3.20.0
 
 possibleMoves = ['Rock', 'Paper', 'Scissors']
-detector = HandDetector(maxHands=1)
-scores = [0, 0]
 
-
-def get_player_move(hands):
+def get_player_move(hands, hand_detector):
     player_move = None
     hand = hands[0]
-    fingers = detector.fingersUp(hand)
+    fingers = hand_detector.fingersUp(hand)
     print(f"player fingers: {fingers}")
 
     # todo find better
@@ -54,7 +51,7 @@ def update_move_ui(playboard, player_move, ai_move):
     return playboard
 
 
-def update_scores(player_move, ai_move):
+def update_scores(player_move, ai_move, scores):
     # Player Wins
     if (player_move == 1 and ai_move == 3) or \
             (player_move == 2 and ai_move == 1) or \
@@ -67,8 +64,9 @@ def update_scores(player_move, ai_move):
             (player_move == 2 and ai_move == 3):
         scores[0] += 1
     # print(scores)
+    return scores
 
-def update_score_ui(playboard):
+def update_score_ui(playboard, scores):
 
     #if showResult:
      #       imgBG = cvzone.overlayPNG(imgBG, imgAI, (149, 310))
@@ -106,10 +104,10 @@ def main():
     vc.set(3, 640)
     vc.set(4, 480)
 
-    # success, img = vc.read()
-
     game_status = GameStatus.NOT_RUNNING
+    scores = [0, 0]
 
+    hand_detector = HandDetector(maxHands=1)
     handshake_detector = HandshakeDetector()
 
     player_move = None
@@ -125,7 +123,7 @@ def main():
         imgScaled = imgScaled[:, 80:480]  # crop so that it fits to the box
 
         # find hands
-        hands, img = detector.findHands(imgScaled)
+        hands, img = hand_detector.findHands(imgScaled)
         if game_status != GameStatus.NOT_RUNNING:
             if hands:
                 handshake_detector.calculate_movement_score(hands[0])
@@ -137,9 +135,9 @@ def main():
                     # Player finished shaking
                     game_status = GameStatus.RUNNING_SHOWING_RESULT
                     
-                    player_move = get_player_move(hands)
+                    player_move = get_player_move(hands, hand_detector)
                     ai_move = do_ai_move(player_move)
-                    update_scores(player_move, ai_move)
+                    scores = update_scores(player_move, ai_move, scores)
 
                 elif (game_status == GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN and handshake_status == HandshakeStatus.SHAKING):
                     game_status = GameStatus.RUNNING_SHAKING
@@ -157,14 +155,14 @@ def main():
 
             # Update UI
             playboard = update_move_ui(playboard, player_move, ai_move)
-            playboard = update_score_ui(playboard)
+            playboard = update_score_ui(playboard, scores)
         playboard = update_game_status_text(playboard, game_status)
 
         # if img is not None:
         # put the exact pixels you want to embed the video
         playboard[234:654, 795:1195] = imgScaled
 
-        playboard = update_score_ui(playboard)
+        playboard = update_score_ui(playboard, scores)
         # cv2.putText(imgBG, str(possibleMoves[player_move+1]), (1112, 200), cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
 
         # if img is not None:
