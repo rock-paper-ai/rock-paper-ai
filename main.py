@@ -132,7 +132,6 @@ def is_key_pressed():
 
 
 def main():
-    cv2.namedWindow("preview")
     vc = cv2.VideoCapture(0)
     vc.set(3, 640)
     vc.set(4, 480)
