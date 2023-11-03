@@ -42,7 +42,7 @@ def update_move_ui(playboard, player_move, ai_move):
     if player_move is None:
         ai_move_image = cv2.imread(f'resources/error.png', cv2.IMREAD_UNCHANGED)
     else:
-        player_move_image = cv2.imread(f'resources/{ai_move.name}.png', cv2.IMREAD_UNCHANGED)
+        player_move_image = cv2.imread(f'resources/{player_move.name}.png', cv2.IMREAD_UNCHANGED)
         player_move_image = cv2.resize(player_move_image, (0, 0), None, 0.235, 0.235)
         playboard = cvzone.overlayPNG(playboard, player_move_image, (810, 230))
 
@@ -76,18 +76,18 @@ def update_score_ui(playboard, scores):
 
 def update_game_status_text(playboard, game_status):
     if game_status == GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN or game_status == GameStatus.RUNNING_SHAKING:
-        cv2.putText(playboard, "Shake your hand and make a move", (385, 697),
+        cv2.putText(playboard, "Shake your hand and make a move!", (385, 697),
                     cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 2)
 
     elif game_status == GameStatus.RUNNING_SHOWING_RESULT:
-        cv2.putText(playboard, "Press any key to continue", (420, 697),
+        cv2.putText(playboard, "Press any key to continue.", (420, 697),
                     cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 2)
 
     elif game_status == GameStatus.RUNNING_SHAKE_DONE_INVALID_PLAYER_MOVE:
-        cv2.putText(playboard, "Did not recognize your move. Press any key to continue", (360, 215),
+        cv2.putText(playboard, "Did not recognize your move. Press any key to continue.", (200, 697),
                     cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 2)
     elif game_status == GameStatus.NOT_RUNNING:
-        cv2.putText(playboard, "Press any key to start the game", (385, 697),
+        cv2.putText(playboard, "Press any key to start the game!", (385, 697),
                     cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 2)
     return playboard
 
@@ -140,7 +140,7 @@ def main():
                     # Player finished shaking
 
                     player_move = get_player_move(hands, hand_detector)
-                    if player_move == -1:
+                    if player_move is None:
                         game_status = GameStatus.RUNNING_SHAKE_DONE_INVALID_PLAYER_MOVE
                     else:
                         game_status = GameStatus.RUNNING_SHOWING_RESULT
@@ -152,6 +152,7 @@ def main():
 
                 elif game_status == GameStatus.RUNNING_SHOWING_RESULT or \
                     game_status == GameStatus.RUNNING_SHAKE_DONE_INVALID_PLAYER_MOVE:
+                    print(f"player_move: {player_move}")
                     if is_key_pressed():
                         game_status = GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN
                         ai_move = None
