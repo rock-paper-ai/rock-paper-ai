@@ -2,23 +2,24 @@ from enum import Enum
 import cv2
 import cvzone
 from cvzone.HandTrackingModule import HandDetector
-import time
 import random
-
 from handshake_detector import HandshakeDetector, HandshakeStatus
-# install: cv2, cvzone, mediapipe, protobuf version 3.20.0
+
 
 class AiAlgorithmStrategy(Enum):
     RANDOM = 1
     SOMETIMES_CHEAT = 2
     MARKOV_CHAIN = 3
 
+
 AI_ALGORITHM_STRATEGY = AiAlgorithmStrategy.RANDOM
+
 
 class Move(Enum):
     ROCK = 0
     PAPER = 1
     SCISSORS = 2
+
 
 def get_player_move(hands, hand_detector) -> Move:
     player_move = None
@@ -90,12 +91,14 @@ def update_scores(player_move, ai_move, scores):
 
     return scores
 
+
 def update_score_ui(playboard, scores):
     cv2.putText(playboard, f"{scores[0]:02d}", (550, 410),
                 cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
     cv2.putText(playboard, f"{scores[1]:02d}", (655, 410),
                 cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
     return playboard
+
 
 def update_game_status_text(playboard, game_status):
     if game_status == GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN or game_status == GameStatus.RUNNING_SHAKING:
@@ -114,6 +117,7 @@ def update_game_status_text(playboard, game_status):
                     cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 2)
     return playboard
 
+
 class GameStatus(Enum):
     NOT_RUNNING = 1
     RUNNING_WAITING_FOR_SHAKE_BEGIN = 2
@@ -121,9 +125,11 @@ class GameStatus(Enum):
     RUNNING_SHOWING_RESULT = 4
     RUNNING_SHAKE_DONE_INVALID_PLAYER_MOVE = 5
 
+
 def is_key_pressed():
     key = cv2.waitKey(1)
     return key > 0
+
 
 def main():
     cv2.namedWindow("preview")
@@ -146,9 +152,9 @@ def main():
         success, camera_img = vc.read()
         camera_img_scaled = cv2.resize(camera_img, (0, 0), None, 0.875, 0.875)
         camera_img_scaled = camera_img_scaled[:, 80:480]  # crop so that it fits to the box
-        
+
         hands, camera_img = hand_detector.findHands(camera_img_scaled)
-        
+
         playboard[213:633, 798:1198] = camera_img_scaled
 
         if game_status != GameStatus.NOT_RUNNING:
@@ -172,12 +178,12 @@ def main():
                     game_status = GameStatus.RUNNING_SHAKING
 
                 elif game_status == GameStatus.RUNNING_SHOWING_RESULT or \
-                    game_status == GameStatus.RUNNING_SHAKE_DONE_INVALID_PLAYER_MOVE:
+                        game_status == GameStatus.RUNNING_SHAKE_DONE_INVALID_PLAYER_MOVE:
                     if is_key_pressed():
                         game_status = GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN
                         ai_move = None
                         player_move = None
-                    
+
             else:
                 handshake_detector.calculate_movement_score(None)
 
@@ -187,9 +193,6 @@ def main():
             playboard = update_move_ui(playboard, player_move, ai_move)
             playboard = update_score_ui(playboard, scores)
         playboard = update_game_status_text(playboard, game_status)
-
-        # put the exact pixels you want to embed the video
-        #playboard[213:633, 798:1198] = imgScaled
 
         playboard = update_score_ui(playboard, scores)
 
