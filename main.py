@@ -120,15 +120,14 @@ def main():
     while True:
         playboard = cv2.imread('resources/BG.png')  # background
 
-        success, img = vc.read()
-        # if img is not None:
-        # calculate the resize amount for the square in your design
-        imgScaled = cv2.resize(img, (0, 0), None, 0.875, 0.875)
-        imgScaled = imgScaled[:, 80:480]  # crop so that it fits to the box
+        success, camera_img = vc.read()
+        camera_img_scaled = cv2.resize(camera_img, (0, 0), None, 0.875, 0.875)
+        camera_img_scaled = camera_img_scaled[:, 80:480]  # crop so that it fits to the box
+        
+        hands, camera_img = hand_detector.findHands(camera_img_scaled)
+        
+        playboard[213:633, 798:1198] = camera_img_scaled
 
-        playboard[213:633, 798:1198] = imgScaled
-
-        hands, img = hand_detector.findHands(imgScaled)
         if game_status != GameStatus.NOT_RUNNING:
             if hands:
                 handshake_detector.calculate_movement_score(hands[0])
@@ -163,7 +162,7 @@ def main():
 
             print(f"game_status: {game_status}")
 
-            playboard[213:633, 798:1198] = imgScaled
+            playboard[213:633, 798:1198] = camera_img_scaled
 
             # Update UI
             playboard = update_move_ui(playboard, player_move, ai_move)
