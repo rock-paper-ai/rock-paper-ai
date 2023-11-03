@@ -24,7 +24,7 @@ def get_player_move(hands, hand_detector) -> Move:
         player_move = Move.ROCK
     elif fingers == [1, 1, 1, 1, 1]:
         player_move = Move.PAPER
-    elif fingers == [0, 1, 1, 0, 0] or fingers == [0, 1, 1, 1, 1]:
+    elif fingers == [0, 1, 1, 0, 0] or fingers == [0, 1, 1, 1, 1] or fingers == [1, 1, 1, 0, 0]:
         player_move = Move.SCISSORS
 
     print(f"player move: {player_move}")
@@ -133,7 +133,6 @@ def main():
                 handshake_detector.calculate_movement_score(hands[0])
 
                 handshake_status = handshake_detector.get_hand_shaking_status()
-                print(f"handshake_status: {handshake_status}")
 
                 if game_status == GameStatus.RUNNING_SHAKING and handshake_status == HandshakeStatus.STEADY:
                     # Player finished shaking
@@ -151,7 +150,6 @@ def main():
 
                 elif game_status == GameStatus.RUNNING_SHOWING_RESULT or \
                     game_status == GameStatus.RUNNING_SHAKE_DONE_INVALID_PLAYER_MOVE:
-                    print(f"player_move: {player_move}")
                     if is_key_pressed():
                         game_status = GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN
                         ai_move = None
@@ -159,8 +157,6 @@ def main():
                     
             else:
                 handshake_detector.calculate_movement_score(None)
-
-            print(f"game_status: {game_status}")
 
             playboard[213:633, 798:1198] = camera_img_scaled
 
