@@ -13,7 +13,7 @@ class AiAlgorithmStrategy(Enum):
     SOMETIMES_CHEAT = 2
     MARKOV_CHAIN = 3
 
-AI_ALGORITHM_STRATEGY = AiAlgorithmStrategy.SOMETIMES_CHEAT
+AI_ALGORITHM_STRATEGY = AiAlgorithmStrategy.RANDOM
 
 class Move(Enum):
     ROCK = 0
@@ -64,11 +64,9 @@ def do_ai_move(player_move) -> Move:
 
 
 def update_move_ui(playboard, player_move, ai_move):
-    if player_move is None:
-        ai_move_image = cv2.imread(f'resources/error.png', cv2.IMREAD_UNCHANGED)
-    else:
+    if player_move is not None:
         player_move_image = cv2.imread(f'resources/{player_move.name}.png', cv2.IMREAD_UNCHANGED)
-        player_move_image = cv2.resize(player_move_image, (0, 0), None, 0.235, 0.235)
+        player_move_image = cv2.resize(player_move_image, (0, 0), None, 0.4, 0.4)
         playboard = cvzone.overlayPNG(playboard, player_move_image, (810, 230))
 
     if ai_move is not None:
