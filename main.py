@@ -124,8 +124,6 @@ def main():
 
         playboard[213:633, 798:1198] = imgScaled
 
-
-        # find hands
         hands, img = hand_detector.findHands(imgScaled)
         if game_status != GameStatus.NOT_RUNNING:
             if hands:
@@ -167,23 +165,17 @@ def main():
             playboard = update_score_ui(playboard, scores)
         playboard = update_game_status_text(playboard, game_status)
 
-        # if img is not None:
         # put the exact pixels you want to embed the video
         #playboard[213:633, 798:1198] = imgScaled
 
         playboard = update_score_ui(playboard, scores)
-        # cv2.putText(imgBG, str(possibleMoves[player_move+1]), (1112, 200), cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
 
-        # if img is not None:
-        # cv2.imshow("image", img)
         cv2.imshow('BG', playboard)
-        # cv2.imshow('imgScaled', imgScaled)
 
         if game_status == GameStatus.NOT_RUNNING:
             cv2.waitKey(0) # Wait for any key to be pressed, freeze the output window
             game_status = GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN
 
-        # success, img = vc.read()
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
