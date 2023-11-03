@@ -8,69 +8,62 @@ import random
 from handshake_detector import HandshakeDetector, HandshakeStatus
 # install: cv2, cvzone, mediapipe, protobuf version 3.20.0
 
-possibleMoves = ['Rock', 'Paper', 'Scissors']
+class Move(Enum):
+    ROCK = 0
+    PAPER = 1
+    SCISSORS = 2
 
-def get_player_move(hands, hand_detector):
+def get_player_move(hands, hand_detector) -> Move:
     player_move = None
     hand = hands[0]
     fingers = hand_detector.fingersUp(hand)
     print(f"player fingers: {fingers}")
 
     # todo find better
-    if fingers == [0, 0, 0, 0, 0] or fingers == [1, 0, 0, 0, 0] or fingers == [0, 0, 0, 0, 1]:  # if Rock
-        player_move = 1
-    elif fingers == [1, 1, 1, 1, 1]:  # if Paper
-        player_move = 2
-    elif fingers == [0, 1, 1, 0, 0] or fingers == [0, 1, 1, 1, 1]:  # if Scissors
-        player_move = 3
-    else:
-        player_move = -1 # Unrecognized
+    if fingers == [0, 0, 0, 0, 0] or fingers == [1, 0, 0, 0, 0] or fingers == [0, 0, 0, 0, 1]:
+        player_move = Move.ROCK
+    elif fingers == [1, 1, 1, 1, 1]:
+        player_move = Move.PAPER
+    elif fingers == [0, 1, 1, 0, 0] or fingers == [0, 1, 1, 1, 1]:
+        player_move = Move.SCISSORS
 
-    if player_move is not None:
-        print(f"player move: {possibleMoves[player_move-1]}")
+    print(f"player move: {player_move}")
 
     return player_move
 
 
-def do_ai_move(player_move):
-    ai_move = random.randint(1, 3)
+def do_ai_move(player_move) -> Move:
+    ai_move = random.choice(list(Move))
     print(f"AI move: {ai_move}")
     return ai_move
 
 
 def update_move_ui(playboard, player_move, ai_move):
-    if player_move == -1:
-        # todo fix the icon and show error message
-
+    if player_move is None:
         ai_move_image = cv2.imread(f'resources/error.png', cv2.IMREAD_UNCHANGED)
-        print('Could not recognise your move!')
 
     if ai_move is not None:
-        ai_move_image = cv2.imread(f'resources/{ai_move}.png', cv2.IMREAD_UNCHANGED)
+        ai_move_image = cv2.imread(f'resources/{ai_move.name}.png', cv2.IMREAD_UNCHANGED)
         playboard = cvzone.overlayPNG(playboard, ai_move_image, (149, 310))
     return playboard
 
 
 def update_scores(player_move, ai_move, scores):
-    # Player Wins
-    if (player_move == 1 and ai_move == 3) or \
-            (player_move == 2 and ai_move == 1) or \
-            (player_move == 3 and ai_move == 2):
+    if (player_move == Move.ROCK and ai_move == Move.SCISSORS) or \
+            (player_move == Move.PAPER and ai_move == Move.ROCK) or \
+            (player_move == Move.SCISSORS and ai_move == Move.PAPER):
+        # Player Wins
         scores[1] += 1
 
-    # AI Wins
-    if (player_move == 3 and ai_move == 1) or \
-            (player_move == 1 and ai_move == 2) or \
-            (player_move == 2 and ai_move == 3):
+    if (player_move == Move.ROCK and ai_move == Move.PAPER) or \
+            (player_move == Move.PAPER and ai_move == Move.SCISSORS) or \
+            (player_move == Move.SCISSORS and ai_move == Move.ROCK):
+        # AI Wins
         scores[0] += 1
-    # print(scores)
+
     return scores
 
 def update_score_ui(playboard, scores):
-
-    #if showResult:
-     #       imgBG = cvzone.overlayPNG(imgBG, imgAI, (149, 310))
-
     cv2.putText(playboard, str(scores[0]), (410, 215),
                 cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
     cv2.putText(playboard, str(scores[1]), (1112, 215),
@@ -79,10 +72,7 @@ def update_score_ui(playboard, scores):
 
 def update_game_status_text(playboard, game_status):
     if game_status == GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN:
-        cv2.putText(playboard, "Shake your hand to start", (410, 215),
-                    cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
-    elif game_status == GameStatus.RUNNING_SHAKING:
-        cv2.putText(playboard, "...", (410, 215),
+        cv2.putText(playboard, "Shake your hand and make a move", (410, 215),
                     cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
     elif game_status == GameStatus.RUNNING_SHOWING_RESULT:
         cv2.putText(playboard, "Press any key to continue", (410, 215),
@@ -91,7 +81,7 @@ def update_game_status_text(playboard, game_status):
         cv2.putText(playboard, "Did not recognize your move. Press any key to continue", (410, 215),
                     cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
     elif game_status == GameStatus.NOT_RUNNING:
-        cv2.putText(playboard, "Press any key to start", (410, 215),
+        cv2.putText(playboard, "Press any key to start the game", (410, 215),
                     cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
     return playboard
 
