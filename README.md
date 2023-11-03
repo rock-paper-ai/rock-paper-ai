@@ -8,7 +8,7 @@ Connect a camera to your machine. It is used to determine the player's move.
 
 1. Install Python version 3
 2. `pip install -U -r requirements.txt`
-3. ` python main.py`
+3. `python main.py`
 
 ## AI strategies
 
