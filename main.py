@@ -98,6 +98,10 @@ class GameStatus(Enum):
     RUNNING_SHOWING_RESULT = 4
     RUNNING_SHAKE_DONE_INVALID_PLAYER_MOVE = 5
 
+def is_key_pressed():
+    key = cv2.waitKey(1)
+    return key > 0
+
 def main():
     cv2.namedWindow("preview")
     vc = cv2.VideoCapture(0)
@@ -148,10 +152,10 @@ def main():
 
                 elif game_status == GameStatus.RUNNING_SHOWING_RESULT or \
                     game_status == GameStatus.RUNNING_SHAKE_DONE_INVALID_PLAYER_MOVE:
-                    cv2.waitKey(0) # Wait for any key to be pressed, freeze the output window
-                    game_status = GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN
-                    ai_move = None
-                    player_move = None
+                    if is_key_pressed():
+                        game_status = GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN
+                        ai_move = None
+                        player_move = None
                     
             else:
                 handshake_detector.calculate_movement_score(None)
@@ -173,8 +177,8 @@ def main():
         cv2.imshow('BG', playboard)
 
         if game_status == GameStatus.NOT_RUNNING:
-            cv2.waitKey(0) # Wait for any key to be pressed, freeze the output window
-            game_status = GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN
+            if is_key_pressed():
+                game_status = GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
