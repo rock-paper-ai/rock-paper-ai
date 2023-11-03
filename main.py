@@ -41,10 +41,14 @@ def do_ai_move(player_move) -> Move:
 def update_move_ui(playboard, player_move, ai_move):
     if player_move is None:
         ai_move_image = cv2.imread(f'resources/error.png', cv2.IMREAD_UNCHANGED)
+    else:
+        player_move_image = cv2.imread(f'resources/{ai_move.name}.png', cv2.IMREAD_UNCHANGED)
+        player_move_image = cv2.resize(player_move_image, (0, 0), None, 0.235, 0.235)
+        playboard = cvzone.overlayPNG(playboard, player_move_image, (810, 230))
 
     if ai_move is not None:
         ai_move_image = cv2.imread(f'resources/{ai_move.name}.png', cv2.IMREAD_UNCHANGED)
-        playboard = cvzone.overlayPNG(playboard, ai_move_image, (149, 310))
+        playboard = cvzone.overlayPNG(playboard, ai_move_image, (160, 260))
     return playboard
 
 
@@ -64,25 +68,27 @@ def update_scores(player_move, ai_move, scores):
     return scores
 
 def update_score_ui(playboard, scores):
-    cv2.putText(playboard, str(scores[0]), (410, 215),
+    cv2.putText(playboard, str(scores[0]), (575, 410),
                 cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
-    cv2.putText(playboard, str(scores[1]), (1112, 215),
+    cv2.putText(playboard, str(scores[1]), (673, 410),
                 cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
     return playboard
 
 def update_game_status_text(playboard, game_status):
-    if game_status == GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN:
-        cv2.putText(playboard, "Shake your hand and make a move", (410, 215),
-                    cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
+    if game_status == GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN or game_status == GameStatus.RUNNING_SHAKING:
+        cv2.putText(playboard, "Shake your hand and make a move", (385, 697),
+                    cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 2)
+
     elif game_status == GameStatus.RUNNING_SHOWING_RESULT:
-        cv2.putText(playboard, "Press any key to continue", (410, 215),
-                    cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
+        cv2.putText(playboard, "Press any key to continue", (420, 697),
+                    cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 2)
+
     elif game_status == GameStatus.RUNNING_SHAKE_DONE_INVALID_PLAYER_MOVE:
-        cv2.putText(playboard, "Did not recognize your move. Press any key to continue", (410, 215),
-                    cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
+        cv2.putText(playboard, "Did not recognize your move. Press any key to continue", (360, 215),
+                    cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 2)
     elif game_status == GameStatus.NOT_RUNNING:
-        cv2.putText(playboard, "Press any key to start the game", (410, 215),
-                    cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
+        cv2.putText(playboard, "Press any key to start the game", (385, 697),
+                    cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 2)
     return playboard
 
 class GameStatus(Enum):
@@ -116,6 +122,9 @@ def main():
         imgScaled = cv2.resize(img, (0, 0), None, 0.875, 0.875)
         imgScaled = imgScaled[:, 80:480]  # crop so that it fits to the box
 
+        playboard[213:633, 798:1198] = imgScaled
+
+
         # find hands
         hands, img = hand_detector.findHands(imgScaled)
         if game_status != GameStatus.NOT_RUNNING:
@@ -127,7 +136,7 @@ def main():
 
                 if game_status == GameStatus.RUNNING_SHAKING and handshake_status == HandshakeStatus.STEADY:
                     # Player finished shaking
-                    
+
                     player_move = get_player_move(hands, hand_detector)
                     if player_move == -1:
                         game_status = GameStatus.RUNNING_SHAKE_DONE_INVALID_PLAYER_MOVE
@@ -151,6 +160,8 @@ def main():
 
             print(f"game_status: {game_status}")
 
+            playboard[213:633, 798:1198] = imgScaled
+
             # Update UI
             playboard = update_move_ui(playboard, player_move, ai_move)
             playboard = update_score_ui(playboard, scores)
@@ -158,7 +169,7 @@ def main():
 
         # if img is not None:
         # put the exact pixels you want to embed the video
-        playboard[234:654, 795:1195] = imgScaled
+        #playboard[213:633, 798:1198] = imgScaled
 
         playboard = update_score_ui(playboard, scores)
         # cv2.putText(imgBG, str(possibleMoves[player_move+1]), (1112, 200), cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
