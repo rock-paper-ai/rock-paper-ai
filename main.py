@@ -79,6 +79,21 @@ def update_score_ui(playboard):
                 cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
     return playboard
 
+def update_game_status_text(playboard, game_status):
+    if game_status == GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN:
+        cv2.putText(playboard, "Shake your hand to start", (410, 215),
+                    cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
+    elif game_status == GameStatus.RUNNING_SHAKING:
+        cv2.putText(playboard, "...", (410, 215),
+                    cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
+    elif game_status == GameStatus.RUNNING_SHOWING_RESULT:
+        cv2.putText(playboard, "Press any key to continue", (410, 215),
+                    cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
+    elif game_status == GameStatus.NOT_RUNNING:
+        cv2.putText(playboard, "Press any key to start", (410, 215),
+                    cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
+    return playboard
+
 class GameStatus(Enum):
     NOT_RUNNING = 1
     RUNNING_WAITING_FOR_SHAKE_BEGIN = 2
@@ -93,7 +108,7 @@ def main():
 
     # success, img = vc.read()
 
-    game_status = GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN
+    game_status = GameStatus.NOT_RUNNING
 
     handshake_detector = HandshakeDetector()
 
@@ -143,7 +158,7 @@ def main():
             # Update UI
             playboard = update_move_ui(playboard, player_move, ai_move)
             playboard = update_score_ui(playboard)
-
+        playboard = update_game_status_text(playboard, game_status)
 
         # if img is not None:
         # put the exact pixels you want to embed the video
@@ -156,6 +171,10 @@ def main():
         # cv2.imshow("image", img)
         cv2.imshow('BG', playboard)
         # cv2.imshow('imgScaled', imgScaled)
+
+        if game_status == GameStatus.NOT_RUNNING:
+            cv2.waitKey(0) # Wait for any key to be pressed, freeze the output window
+            game_status = GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN
 
         # success, img = vc.read()
         if cv2.waitKey(1) & 0xFF == ord('q'):
