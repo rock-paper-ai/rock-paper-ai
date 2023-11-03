@@ -124,16 +124,16 @@ def main():
                     
                     player_move = get_player_move(hands)
                     ai_move = do_ai_move(player_move)
-                    playboard = update_move_ui(playboard, player_move, ai_move)
                     update_scores(player_move, ai_move)
-                    playboard=update_score_ui(playboard)
 
                 elif (game_status == GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN and handshake_status == HandshakeStatus.SHAKING):
                     game_status = GameStatus.RUNNING_SHAKING
 
                 elif game_status == GameStatus.RUNNING_SHOWING_RESULT:
-                    # TODO wait for user input, and then reset the player_move and ai_move variables and then set status to WAITING_FOR_SHAKE_BEGIN
-                    pass
+                    cv2.waitKey(0) # Wait for any key to be pressed, freeze the output window
+                    game_status = GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN
+                    ai_move = None
+                    player_move = None
                     
             else:
                 handshake_detector.calculate_movement_score(None)
