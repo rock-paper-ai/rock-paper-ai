@@ -129,8 +129,9 @@ class GameStatus(Enum):
 
 
 def is_key_pressed():
-    key = cv2.waitKey(1)
-    return key > 0
+    key = cv2.pollKey()
+    # Returns -1 if no key is pressed
+    return key != -1
 
 
 def main():
