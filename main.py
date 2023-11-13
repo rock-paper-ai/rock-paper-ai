@@ -4,7 +4,7 @@ import cvzone
 from cvzone.HandTrackingModule import HandDetector
 import random
 
-import numpy
+import numpy as np
 from handshake_detector import HandshakeDetector, HandshakeStatus
 
 
@@ -152,11 +152,12 @@ def main():
 
         success, camera_img = vc.read()
         camera_img_scaled = cv2.resize(camera_img, (0, 0), None, 0.875, 0.875)
+        camera_img_scaled = cv2.flip(camera_img_scaled, 1)
         camera_img_scaled = camera_img_scaled[:, 80:480]  # crop so that it fits to the box
 
-        hands, camera_img = hand_detector.findHands(camera_img_scaled)
+        hands, camera_img = hand_detector.findHands(camera_img_scaled, flipType=False)
 
-        playboard[213:633, 798:1198] = numpy.flip(camera_img_scaled, 1)
+        playboard[213:633, 798:1198] = camera_img_scaled
 
         if game_status != GameStatus.NOT_RUNNING:
             if hands:
@@ -187,8 +188,6 @@ def main():
 
             else:
                 handshake_detector.calculate_movement_score(None)
-
-            playboard[213:633, 798:1198] = numpy.flip(camera_img_scaled, 1)
 
             # Update UI
             playboard = update_move_ui(playboard, player_move, ai_move)
