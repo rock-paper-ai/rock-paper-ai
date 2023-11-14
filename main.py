@@ -36,9 +36,9 @@ def get_player_move(hands, hand_detector) -> Move:
     # todo find better
     if fingers == [0, 0, 0, 0, 0] or fingers == [1, 0, 0, 0, 0] or fingers == [0, 0, 0, 0, 1]:
         player_move = Move.ROCK
-    elif fingers == [1, 1, 1, 1, 1]:
+    elif fingers == [1, 1, 1, 1, 1] or fingers == [0, 1, 1, 1, 1]:
         player_move = Move.PAPER
-    elif fingers == [0, 1, 1, 0, 0] or fingers == [0, 1, 1, 1, 1] or fingers == [1, 1, 1, 0, 0]:
+    elif fingers == [0, 1, 1, 0, 0] or fingers == [1, 1, 1, 0, 0]:
         player_move = Move.SCISSORS
 
     print(f"player move: {player_move}")
