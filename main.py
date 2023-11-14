@@ -149,6 +149,8 @@ def is_key_pressed():
 
 
 def main():
+    global ai_hand_shaking_frame_idx
+
     vc = cv2.VideoCapture(0)
     vc.set(3, 640)
     vc.set(4, 480)
