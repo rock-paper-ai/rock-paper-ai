@@ -1,3 +1,4 @@
+import math
 from enum import Enum
 import cv2
 import cvzone
@@ -21,6 +22,9 @@ class Move(Enum):
     ROCK = 0
     PAPER = 1
     SCISSORS = 2
+
+
+ai_hand_shaking_frame_idx = 0
 
 
 def get_player_move(hands, hand_detector) -> Move:
@@ -66,7 +70,9 @@ def do_ai_move(player_move) -> Move:
     return ai_move
 
 
-def update_move_ui(playboard, player_move, ai_move):
+def update_move_ui(playboard, player_move, ai_move, game_status):
+    global ai_hand_shaking_frame_idx
+
     if player_move is not None:
         player_move_image = cv2.imread(f'resources/{player_move.name}.png', cv2.IMREAD_UNCHANGED)
         player_move_image = cv2.resize(player_move_image, (0, 0), None, 0.4, 0.4)
@@ -75,6 +81,14 @@ def update_move_ui(playboard, player_move, ai_move):
     if ai_move is not None:
         ai_move_image = cv2.imread(f'resources/{ai_move.name}.png', cv2.IMREAD_UNCHANGED)
         playboard = cvzone.overlayPNG(playboard, ai_move_image, (160, 260))
+
+    if game_status == GameStatus.RUNNING_SHAKING:
+        # Display robot shaking animation
+        ai_move_image = cv2.imread(f'resources/ROCK.png', cv2.IMREAD_UNCHANGED)
+        y_shift = int(math.sin(ai_hand_shaking_frame_idx * 0.4) * 50)
+        playboard = cvzone.overlayPNG(playboard, ai_move_image, (160, 260 + y_shift))
+        ai_hand_shaking_frame_idx += 1
+
     return playboard
 
 
@@ -177,8 +191,10 @@ def main():
                         ai_move = do_ai_move(player_move)
                         scores = update_scores(player_move, ai_move, scores)
 
-                elif (game_status == GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN and handshake_status == HandshakeStatus.SHAKING):
+                elif (
+                        game_status == GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN and handshake_status == HandshakeStatus.SHAKING):
                     game_status = GameStatus.RUNNING_SHAKING
+                    ai_hand_shaking_frame_idx = 0  # Start AI shaking animation from the beginning
 
                 elif game_status == GameStatus.RUNNING_SHOWING_RESULT or \
                         game_status == GameStatus.RUNNING_SHAKE_DONE_INVALID_PLAYER_MOVE:
@@ -191,7 +207,7 @@ def main():
                 handshake_detector.calculate_movement_score(None)
 
             # Update UI
-            playboard = update_move_ui(playboard, player_move, ai_move)
+            playboard = update_move_ui(playboard, player_move, ai_move, game_status)
             playboard = update_score_ui(playboard, scores)
         playboard = update_game_status_text(playboard, game_status)
 
