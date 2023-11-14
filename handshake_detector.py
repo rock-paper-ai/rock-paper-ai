@@ -9,6 +9,9 @@ class HandshakeStatus(Enum):
     # Hand has never shaked or finished shaking
     STEADY = 3
 
+    # Hand has left the camera frame or was not detected
+    FAILED = 4
+
 
 class HandshakeDetector:
     def __init__(self) -> None:
@@ -28,6 +31,8 @@ class HandshakeDetector:
         # Percentage of the last _movement_history_running_average_window many frames where the hand was moving
         self.movement_score_percent = 0
 
+        self.failed = False
+
     def debug(self, msg):
         if self._debug:
             print(msg)
@@ -43,6 +48,7 @@ class HandshakeDetector:
                 self._movement_history = []
                 self._movement_score_percent_history = []
                 self._num_no_hand_detected = 0
+                self.failed = True
 
             return 0
 
@@ -80,6 +86,9 @@ class HandshakeDetector:
             # print(f"is_hand_moving: {is_hand_moving}")
             self._movement_history.append(is_hand_moving)
 
+            if is_hand_moving:
+                self.failed = False
+
             # Keep the list length within the running_average_window
             if len(self._movement_history) > self._movement_history_running_average_window:
                 self._movement_history.pop(0)
@@ -100,6 +109,9 @@ class HandshakeDetector:
         Calculates hand shaking status using the second derivative (acceleration)
         """
         handshake_status = HandshakeStatus.STEADY
+
+        if self.failed:
+            handshake_status = HandshakeStatus.FAILED
 
         if self.movement_score_percent > self._movement_score_percent_threshold:
             handshake_status = HandshakeStatus.SHAKING
