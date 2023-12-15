@@ -14,8 +14,6 @@ import threading
 import numpy as np
 from handshake_detector import HandshakeDetector, HandshakeStatus
 
-def start_game():
-    speak_text("Game started, make your move!")
 
 def speak_text(text):
     tts = gTTS(text=text, lang='en')
@@ -38,6 +36,7 @@ class Move(Enum):
     SCISSORS = 2
 
 
+last_frame_key_pressed = False
 game_play_id = int(time.time())
 ai_hand_shaking_frame_idx = 0
 scores = [0, 0]
@@ -236,13 +235,12 @@ class GameStatus(Enum):
 
 
 def is_key_pressed():
-    key = cv2.pollKey()
-    # Returns -1 if no key is pressed
-    return key != -1
+    global last_frame_key_pressed
+    return last_frame_key_pressed
 
 
 def main():
-    global ai_hand_shaking_frame_idx, scores
+    global ai_hand_shaking_frame_idx, scores, last_frame_key_pressed
 
     vc = cv2.VideoCapture(0)
     vc.set(3, 640)
@@ -290,9 +288,8 @@ def main():
                         game_status = GameStatus.RUNNING_SHOWING_RESULT
                         ai_move = do_ai_move(player_move, last_ai_move, last_player_move)
                         scores = update_scores(player_move, ai_move, scores)
-                        #speak_text()
-                        x= threading.Thread(target=speak_text,args=(f"Player move: {player_move.name}, AI move: {ai_move.name}",))
-                        #speak_text("Game started, make your move!")
+                        x = threading.Thread(target=speak_text,
+                                             args=(f"Player move: {player_move.name}, AI move: {ai_move.name}",))
                         x.start()
 
                         # Update Markov chain
@@ -324,12 +321,16 @@ def main():
         if game_status == GameStatus.NOT_RUNNING:
             if is_key_pressed():
                 game_status = GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN
-                x= threading.Thread(target=speak_text, args=("Game started, make your move!",))
-                #speak_text("Game started, make your move!")
+                x = threading.Thread(target=speak_text, args=("Game started, make your move!",))
                 x.start()
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        last_frame_key_pressed = False
+        pressed_key = cv2.pollKey()
+        if pressed_key & 0xFF == ord('q'):
             break
+        elif pressed_key != -1:
+            print(f"A non-q key was pressed")
+            last_frame_key_pressed = True
 
 
 if __name__ == "__main__":
