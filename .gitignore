@@ -12,3 +12,6 @@ __pycache__
 
 # Mac OS
 .DS_Store
+
+# Game play logs
+game_play_logs/*.json

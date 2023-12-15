@@ -1,5 +1,9 @@
+import json
 import math
+import os
+import time
 from enum import Enum
+
 import cv2
 import cvzone
 from cvzone.HandTrackingModule import HandDetector
@@ -15,7 +19,7 @@ class AiAlgorithmStrategy(Enum):
     MARKOV_CHAIN = 3
 
 
-AI_ALGORITHM_STRATEGY = AiAlgorithmStrategy.RANDOM
+AI_ALGORITHM_STRATEGY = AiAlgorithmStrategy.MARKOV_CHAIN
 
 
 class Move(Enum):
@@ -24,7 +28,14 @@ class Move(Enum):
     SCISSORS = 2
 
 
+game_play_id = int(time.time())
 ai_hand_shaking_frame_idx = 0
+scores = [0, 0]
+
+# Dimension 0: 3 previous player moves (rock, paper, scissors)
+# Dimension 1: 3 previous AI moves (rock, paper, scissors)
+# Dimension 2: 3 next player moves (rock, paper, scissors)
+markov_chain_matrix = np.zeros((3, 3, 3), dtype=int)
 
 
 def get_player_move(hands, hand_detector) -> Move:
@@ -46,22 +57,41 @@ def get_player_move(hands, hand_detector) -> Move:
     return player_move
 
 
-def do_ai_move(player_move) -> Move:
+def get_beating_move(move: Move) -> Move:
+    if move == Move.ROCK:
+        return Move.PAPER
+    elif move == Move.PAPER:
+        return Move.SCISSORS
+    elif move == Move.SCISSORS:
+        return Move.ROCK
+    else:
+        raise AssertionError()
+
+
+def do_ai_move(player_move, last_ai_move, last_player_move) -> Move:
+    global markov_chain_matrix
+
     if AI_ALGORITHM_STRATEGY == AiAlgorithmStrategy.RANDOM:
         ai_move = random.choice(list(Move))
 
     elif AI_ALGORITHM_STRATEGY == AiAlgorithmStrategy.SOMETIMES_CHEAT:
         do_cheat = random.random() < 0.2
         if do_cheat:
-            if player_move == Move.ROCK:
-                ai_move = Move.PAPER
-            elif player_move == Move.PAPER:
-                ai_move = Move.SCISSORS
-            elif player_move == Move.SCISSORS:
-                ai_move = Move.ROCK
+            ai_move = get_beating_move(player_move)
         else:
             # Fair play
             ai_move = random.choice(list(Move))
+
+    elif AI_ALGORITHM_STRATEGY == AiAlgorithmStrategy.MARKOV_CHAIN:
+        if last_player_move is None:
+            # First round
+            ai_move = random.choice(list(Move))
+        else:
+            predicted_player_move = np.argmax(markov_chain_matrix[last_player_move.value, last_ai_move.value])
+            print(f"Markov predicted_player_move: {predicted_player_move}")
+
+            # Choose a move to beat the predicted move
+            ai_move = get_beating_move(Move(predicted_player_move))
 
     else:
         raise NotImplementedError()
@@ -73,12 +103,16 @@ def do_ai_move(player_move) -> Move:
 def update_move_ui(playboard, player_move, ai_move, game_status):
     global ai_hand_shaking_frame_idx
 
-    if player_move is not None:
+    if game_status is not GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN \
+            and game_status is not GameStatus.RUNNING_SHAKING \
+            and player_move is not None:
         player_move_image = cv2.imread(f'resources/{player_move.name}.png', cv2.IMREAD_UNCHANGED)
         player_move_image = cv2.resize(player_move_image, (0, 0), None, 0.4, 0.4)
         playboard = cvzone.overlayPNG(playboard, player_move_image, (810, 230))
 
-    if ai_move is not None:
+    if game_status is not GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN \
+            and game_status is not GameStatus.RUNNING_SHAKING \
+            and ai_move is not None:
         ai_move_image = cv2.imread(f'resources/{ai_move.name}.png', cv2.IMREAD_UNCHANGED)
         playboard = cvzone.overlayPNG(playboard, ai_move_image, (160, 260))
 
@@ -99,13 +133,62 @@ def update_scores(player_move, ai_move, scores):
         # Player Wins
         scores[1] += 1
 
-    if (player_move == Move.ROCK and ai_move == Move.PAPER) or \
+    elif (player_move == Move.ROCK and ai_move == Move.PAPER) or \
             (player_move == Move.PAPER and ai_move == Move.SCISSORS) or \
             (player_move == Move.SCISSORS and ai_move == Move.ROCK):
         # AI Wins
         scores[0] += 1
 
     return scores
+
+
+def update_markov_chain(last_player_move, last_ai_move, player_move):
+    global markov_chain_matrix
+
+    if last_player_move is None:
+        print("First round, cannot yet update Markov chain matrix")
+    else:
+        markov_chain_matrix[last_player_move.value, last_ai_move.value, player_move.value] += 1
+
+        print("markov_chain_matrix:")
+
+        print_markov_chain_matrix_for(Move.ROCK, Move.ROCK)
+        print_markov_chain_matrix_for(Move.ROCK, Move.PAPER)
+        print_markov_chain_matrix_for(Move.ROCK, Move.SCISSORS)
+
+        print_markov_chain_matrix_for(Move.PAPER, Move.ROCK)
+        print_markov_chain_matrix_for(Move.PAPER, Move.PAPER)
+        print_markov_chain_matrix_for(Move.PAPER, Move.SCISSORS)
+
+        print_markov_chain_matrix_for(Move.SCISSORS, Move.ROCK)
+        print_markov_chain_matrix_for(Move.SCISSORS, Move.PAPER)
+        print_markov_chain_matrix_for(Move.SCISSORS, Move.SCISSORS)
+
+
+def print_markov_chain_matrix_for(last_player_move: Move, last_ai_move: Move):
+    global markov_chain_matrix
+
+    print(
+        f"  Last P move: {last_player_move.name}, last AI move: {last_ai_move.name}, num next P ROCK moves: {markov_chain_matrix[last_player_move.value, last_ai_move.value, Move.ROCK.value]}")
+    print(
+        f"  Last P move: {last_player_move.name}, last AI move: {last_ai_move.name}, num next P PAPER moves: {markov_chain_matrix[last_player_move.value, last_ai_move.value, Move.PAPER.value]}")
+    print(
+        f"  Last P move: {last_player_move.name}, last AI move: {last_ai_move.name}, num next P SCISSORS moves: {markov_chain_matrix[last_player_move.value, last_ai_move.value, Move.SCISSORS.value]}")
+
+
+def save_game_play_log():
+    global game_play_id, markov_chain_matrix, scores
+
+    game_play_log_path = os.path.join("game_play_logs", f"{game_play_id}.json")
+    with open(game_play_log_path, 'w') as f:
+        f.write(
+            json.dumps({
+                "game_play_id": game_play_id,
+                "ai_algorithm_strategy": AI_ALGORITHM_STRATEGY.name,
+                "markov_chain_matrix": markov_chain_matrix.tolist(),
+                "scores": scores,
+            }, indent=4)
+        )
 
 
 def update_score_ui(playboard, scores):
@@ -149,19 +232,20 @@ def is_key_pressed():
 
 
 def main():
-    global ai_hand_shaking_frame_idx
+    global ai_hand_shaking_frame_idx, scores
 
     vc = cv2.VideoCapture(0)
     vc.set(3, 640)
     vc.set(4, 480)
 
     game_status = GameStatus.NOT_RUNNING
-    scores = [0, 0]
 
     hand_detector = HandDetector(maxHands=1)
     handshake_detector = HandshakeDetector()
 
     player_move = None
+    last_player_move = None
+    last_ai_move = None
     ai_move = None
 
     while True:
@@ -185,13 +269,21 @@ def main():
                 if game_status == GameStatus.RUNNING_SHAKING and handshake_status == HandshakeStatus.STEADY:
                     # Player finished shaking
 
+                    print(f"bef up: {player_move}")
+                    last_player_move = player_move
+                    last_ai_move = ai_move
                     player_move = get_player_move(hands, hand_detector)
+                    print(f"aft up: {player_move}")
                     if player_move is None:
                         game_status = GameStatus.RUNNING_SHAKE_DONE_INVALID_PLAYER_MOVE
                     else:
                         game_status = GameStatus.RUNNING_SHOWING_RESULT
-                        ai_move = do_ai_move(player_move)
+                        ai_move = do_ai_move(player_move, last_ai_move, last_player_move)
                         scores = update_scores(player_move, ai_move, scores)
+
+                        # Update Markov chain
+                        update_markov_chain(last_player_move, last_ai_move, player_move)
+                        save_game_play_log()
 
                 elif (
                         game_status == GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN and handshake_status == HandshakeStatus.SHAKING):
@@ -202,8 +294,6 @@ def main():
                         game_status == GameStatus.RUNNING_SHAKE_DONE_INVALID_PLAYER_MOVE:
                     if is_key_pressed():
                         game_status = GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN
-                        ai_move = None
-                        player_move = None
 
             else:
                 handshake_detector.calculate_movement_score(None)
