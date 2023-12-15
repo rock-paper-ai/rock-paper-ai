@@ -8,9 +8,19 @@ import cv2
 import cvzone
 from cvzone.HandTrackingModule import HandDetector
 import random
-
+from gtts import gTTS
+import os
+import threading
 import numpy as np
 from handshake_detector import HandshakeDetector, HandshakeStatus
+
+def start_game():
+    speak_text("Game started, make your move!")
+
+def speak_text(text):
+    tts = gTTS(text=text, lang='en')
+    tts.save("speech.mp3")
+    os.system("afplay speech.mp3")
 
 
 class AiAlgorithmStrategy(Enum):
@@ -280,6 +290,10 @@ def main():
                         game_status = GameStatus.RUNNING_SHOWING_RESULT
                         ai_move = do_ai_move(player_move, last_ai_move, last_player_move)
                         scores = update_scores(player_move, ai_move, scores)
+                        #speak_text()
+                        x= threading.Thread(target=speak_text,args=(f"Player move: {player_move.name}, AI move: {ai_move.name}",))
+                        #speak_text("Game started, make your move!")
+                        x.start()
 
                         # Update Markov chain
                         update_markov_chain(last_player_move, last_ai_move, player_move)
@@ -310,6 +324,9 @@ def main():
         if game_status == GameStatus.NOT_RUNNING:
             if is_key_pressed():
                 game_status = GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN
+                x= threading.Thread(target=speak_text, args=("Game started, make your move!",))
+                #speak_text("Game started, make your move!")
+                x.start()
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break

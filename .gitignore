@@ -15,3 +15,5 @@ __pycache__
 
 # Game play logs
 game_play_logs/*.json
+
+*.mp3
