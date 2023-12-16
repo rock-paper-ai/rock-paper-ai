@@ -250,9 +250,9 @@ def is_key_pressed():
 def main():
     global ai_hand_shaking_frame_idx, scores, last_frame_key_pressed, rounds
 
-    ai_lost = ['You won!', 'Keep going!', 'Nice one!', 'Well done!', 'Wow!', 'Impressive!',]
-    ai_won = ['Haha you lost!', 'Level up your game!', 'Maybe next time?', 'Cant beat me!']
-    ai_neural = ['Great minds think alike']
+    ai_lost = ['You won!', 'Keep going!', 'Nice one!', 'Well done!', 'Wow!', 'Impressive!', 'Good job!', 'Fantastic!']
+    ai_won = ['Haha you lost!', 'Level up your game!', 'Maybe next time?', 'Cant beat me!', 'Nice try!', 'Victory is mine!', 'Too easy!']
+    ai_neural = ['Great minds think alike', 'Tie!', 'Its a draw!', 'Same choice!', 'We match!', 'No winner this time!']
 
     vc = cv2.VideoCapture(0)
     vc.set(3, 640)
