@@ -170,19 +170,20 @@ def update_markov_chain(last_player_move, last_ai_move, player_move):
     else:
         markov_chain_matrix[last_player_move.value, last_ai_move.value, player_move.value] += 1
 
-        print("markov_chain_matrix:")
+        if AI_ALGORITHM_STRATEGY == AiAlgorithmStrategy.MARKOV_CHAIN:
+            print("markov_chain_matrix:")
 
-        print_markov_chain_matrix_for(Move.ROCK, Move.ROCK)
-        print_markov_chain_matrix_for(Move.ROCK, Move.PAPER)
-        print_markov_chain_matrix_for(Move.ROCK, Move.SCISSORS)
+            print_markov_chain_matrix_for(Move.ROCK, Move.ROCK)
+            print_markov_chain_matrix_for(Move.ROCK, Move.PAPER)
+            print_markov_chain_matrix_for(Move.ROCK, Move.SCISSORS)
 
-        print_markov_chain_matrix_for(Move.PAPER, Move.ROCK)
-        print_markov_chain_matrix_for(Move.PAPER, Move.PAPER)
-        print_markov_chain_matrix_for(Move.PAPER, Move.SCISSORS)
+            print_markov_chain_matrix_for(Move.PAPER, Move.ROCK)
+            print_markov_chain_matrix_for(Move.PAPER, Move.PAPER)
+            print_markov_chain_matrix_for(Move.PAPER, Move.SCISSORS)
 
-        print_markov_chain_matrix_for(Move.SCISSORS, Move.ROCK)
-        print_markov_chain_matrix_for(Move.SCISSORS, Move.PAPER)
-        print_markov_chain_matrix_for(Move.SCISSORS, Move.SCISSORS)
+            print_markov_chain_matrix_for(Move.SCISSORS, Move.ROCK)
+            print_markov_chain_matrix_for(Move.SCISSORS, Move.PAPER)
+            print_markov_chain_matrix_for(Move.SCISSORS, Move.SCISSORS)
 
 
 def print_markov_chain_matrix_for(last_player_move: Move, last_ai_move: Move):
