@@ -3,3 +3,4 @@ cvzone
 mediapipe
 protobuf
 gTTS
+pygame

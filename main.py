@@ -14,12 +14,15 @@ import threading
 import numpy as np
 from handshake_detector import HandshakeDetector, HandshakeStatus
 import random
+from pygame import mixer
 
 
 def speak_text(text):
     tts = gTTS(text=text, lang='en')
     tts.save("speech.mp3")
-    os.system("afplay speech.mp3")
+    mixer.init()
+    mixer.music.load('speech.mp3')
+    mixer.music.play()
 
 
 class AiAlgorithmStrategy(Enum):
