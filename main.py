@@ -13,6 +13,7 @@ import os
 import threading
 import numpy as np
 from handshake_detector import HandshakeDetector, HandshakeStatus
+import random
 
 
 def speak_text(text):
@@ -40,6 +41,7 @@ last_frame_key_pressed = False
 game_play_id = int(time.time())
 ai_hand_shaking_frame_idx = 0
 scores = [0, 0]
+rounds = -1
 
 # Dimension 0: 3 previous player moves (rock, paper, scissors)
 # Dimension 1: 3 previous AI moves (rock, paper, scissors)
@@ -135,20 +137,26 @@ def update_move_ui(playboard, player_move, ai_move, game_status):
     return playboard
 
 
-def update_scores(player_move, ai_move, scores):
+def update_scores(player_move, ai_move, scores, rounds):
+
+    player_won = 0
     if (player_move == Move.ROCK and ai_move == Move.SCISSORS) or \
             (player_move == Move.PAPER and ai_move == Move.ROCK) or \
             (player_move == Move.SCISSORS and ai_move == Move.PAPER):
         # Player Wins
         scores[1] += 1
+        player_won= 1
 
     elif (player_move == Move.ROCK and ai_move == Move.PAPER) or \
             (player_move == Move.PAPER and ai_move == Move.SCISSORS) or \
             (player_move == Move.SCISSORS and ai_move == Move.ROCK):
         # AI Wins
         scores[0] += 1
+        player_won = -1
 
-    return scores
+    rounds += 1
+
+    return scores, player_won, rounds
 
 
 def update_markov_chain(last_player_move, last_ai_move, player_move):
@@ -240,7 +248,11 @@ def is_key_pressed():
 
 
 def main():
-    global ai_hand_shaking_frame_idx, scores, last_frame_key_pressed
+    global ai_hand_shaking_frame_idx, scores, last_frame_key_pressed, rounds
+
+    ai_lost = ['You won!', 'Keep going!', 'Nice one!', 'Well done!', 'Wow!', 'Impressive!',]
+    ai_won = ['Haha you lost!', 'Level up your game!', 'Maybe next time?', 'Cant beat me!']
+    ai_neural = ['Great minds think alike']
 
     vc = cv2.VideoCapture(0)
     vc.set(3, 640)
@@ -287,10 +299,26 @@ def main():
                     else:
                         game_status = GameStatus.RUNNING_SHOWING_RESULT
                         ai_move = do_ai_move(player_move, last_ai_move, last_player_move)
-                        scores = update_scores(player_move, ai_move, scores)
-                        x = threading.Thread(target=speak_text,
-                                             args=(f"Player move: {player_move.name}, AI move: {ai_move.name}",))
-                        x.start()
+                        scores, player_won, rounds = update_scores(player_move, ai_move, scores, rounds)
+                        if rounds % 3 == 0:
+                            ai_text = ''
+                            if player_won == 1:
+                                i = random.randint(0, len(ai_lost)-1)
+                                ai_text = ai_lost[i]
+                                x = threading.Thread(target=speak_text, args=(ai_text,))
+                                x.start()
+                            elif player_won == -1:
+                                i = random.randint(0, len(ai_won)-1)
+                                ai_text = ai_won[i]
+                                x = threading.Thread(target=speak_text, args=(ai_text,))
+                                #x = threading.Thread(target=speak_text, args=(f"HA HA, I WON",))
+                                x.start()
+                            else:
+                                i = random.randint(0, len(ai_neural)-1)
+                                ai_text = ai_neural[0]
+                                x = threading.Thread(target=speak_text, args=(ai_text,))
+                                #x = threading.Thread(target=speak_text, args=(f"Great minds think alike.",))
+                                x.start()
 
                         # Update Markov chain
                         update_markov_chain(last_player_move, last_ai_move, player_move)
@@ -321,7 +349,7 @@ def main():
         if game_status == GameStatus.NOT_RUNNING:
             if is_key_pressed():
                 game_status = GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN
-                x = threading.Thread(target=speak_text, args=("Game started, make your move!",))
+                x = threading.Thread(target=speak_text, args=("Let's play!",))
                 x.start()
 
         last_frame_key_pressed = False
