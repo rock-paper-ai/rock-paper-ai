@@ -31,7 +31,7 @@ class AiAlgorithmStrategy(Enum):
     MARKOV_CHAIN = 3
 
 
-AI_ALGORITHM_STRATEGY = AiAlgorithmStrategy.MARKOV_CHAIN
+AI_ALGORITHM_STRATEGY = AiAlgorithmStrategy.RANDOM
 
 
 class Move(Enum):
@@ -254,9 +254,9 @@ def is_key_pressed():
 def main():
     global ai_hand_shaking_frame_idx, scores, last_frame_key_pressed, rounds
 
-    ai_lost = ['You won!', 'Keep going!', 'Nice one!', 'Well done!', 'Wow!', 'Impressive!', 'Good job!', 'Fantastic!']
-    ai_won = ['Haha you lost!', 'Level up your game!', 'Maybe next time?', 'Cant beat me!', 'Nice try!', 'Victory is mine!', 'Too easy!']
-    ai_neural = ['Great minds think alike', 'Tie!', 'Its a draw!', 'Same choice!', 'We match!', 'No winner this time!']
+    speech_texts_ai_lost = ['You won!', 'Keep going!', 'Nice one!', 'Well done!', 'Wow!', 'Impressive!', 'Good job!', 'Fantastic!']
+    speech_texts_ai_won = ['Haha you lost!', 'Level up your game!', 'Maybe next time?', 'Cant beat me!', 'Nice try!', 'Victory is mine!', 'Too easy!']
+    speech_texts_tie = ['Great minds think alike', 'Tie!', 'Its a draw!', 'Same choice!', 'We match!', 'No winner this time!']
 
     vc = cv2.VideoCapture(0)
     vc.set(3, 640)
@@ -307,19 +307,19 @@ def main():
                         if rounds % 3 == 0:
                             ai_text = ''
                             if player_won == 1:
-                                i = random.randint(0, len(ai_lost)-1)
-                                ai_text = ai_lost[i]
+                                i = random.randint(0, len(speech_texts_ai_lost)-1)
+                                ai_text = speech_texts_ai_lost[i]
                                 x = threading.Thread(target=speak_text, args=(ai_text,))
                                 x.start()
                             elif player_won == -1:
-                                i = random.randint(0, len(ai_won)-1)
-                                ai_text = ai_won[i]
+                                i = random.randint(0, len(speech_texts_ai_won)-1)
+                                ai_text = speech_texts_ai_won[i]
                                 x = threading.Thread(target=speak_text, args=(ai_text,))
                                 #x = threading.Thread(target=speak_text, args=(f"HA HA, I WON",))
                                 x.start()
                             else:
-                                i = random.randint(0, len(ai_neural)-1)
-                                ai_text = ai_neural[0]
+                                i = random.randint(0, len(speech_texts_tie)-1)
+                                ai_text = speech_texts_tie[0]
                                 x = threading.Thread(target=speak_text, args=(ai_text,))
                                 #x = threading.Thread(target=speak_text, args=(f"Great minds think alike.",))
                                 x.start()

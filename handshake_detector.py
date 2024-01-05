@@ -63,7 +63,7 @@ class HandshakeDetector:
         self.movement_score_percent = 0
 
         if self._prev_landmarks is not None:
-            landmark_movements = []
+            landmark_velocities = []
             for idx, landmark in enumerate(hand_landmarks):
                 # Calculate the change in position
                 dx = landmark[0] - self._prev_landmarks[idx][0]
@@ -72,17 +72,17 @@ class HandshakeDetector:
                 # Calculate the movement amount score based on the change in position
                 # Use the Euclidean distance to measure the movement
                 # Divide by a constant to make the number more human-friendly
-                # It's the first derivative of the current position (=speed)
-                this_landmark_movement = int(
+                # It's the first derivative of the current position (=velocity)
+                this_landmark_velocity = int(
                     (dx ** 2 + dy ** 2) / (time_diff ** 2) / 1000)
-                landmark_movements.append(this_landmark_movement)
+                landmark_velocities.append(this_landmark_velocity)
 
-            this_frame_movement = int(
-                sum(landmark_movements) / len(landmark_movements))
-            self.debug(f"this_frame_movement: {this_frame_movement}")
+            this_frame_avg_velocity = int(
+                sum(landmark_velocities) / len(landmark_velocities))
+            self.debug(f"this_frame_movement: {this_frame_avg_velocity}")
 
             # Determine if hand is moving and append to history
-            is_hand_moving = this_frame_movement > self._frame_movement_threshold
+            is_hand_moving = this_frame_avg_velocity > self._frame_movement_threshold
             # print(f"is_hand_moving: {is_hand_moving}")
             self._movement_history.append(is_hand_moving)
 
