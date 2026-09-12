@@ -30,7 +30,7 @@ class AiAlgorithmStrategy(Enum):
     MARKOV_CHAIN = 3
 
 
-AI_ALGORITHM_STRATEGY = AiAlgorithmStrategy.RANDOM
+AI_ALGORITHM_STRATEGY = AiAlgorithmStrategy.MARKOV_CHAIN
 
 
 class Move(Enum):
