@@ -33,6 +33,11 @@ class HandshakeDetector:
 
         self.failed = False
 
+        # Timestamp of when shaking was first detected in the current shaking motion, used to
+        # suppress premature "stopped shaking" detections right after shaking begins
+        self._shaking_start_time = None
+        self._min_shaking_duration_seconds = 1.0
+
     def debug(self, msg):
         if self._debug:
             print(msg)
@@ -115,6 +120,19 @@ class HandshakeDetector:
 
         if self.movement_score_percent > self._movement_score_percent_threshold:
             handshake_status = HandshakeStatus.SHAKING
+
+        if handshake_status == HandshakeStatus.SHAKING:
+            if self._shaking_start_time is None:
+                self._shaking_start_time = time.time()
+        elif handshake_status == HandshakeStatus.STEADY and self._shaking_start_time is not None:
+            # Don't report "stopped shaking" within the first second of shaking, to avoid
+            # false positives from a brief pause right after the player starts shaking
+            if time.time() - self._shaking_start_time < self._min_shaking_duration_seconds:
+                handshake_status = HandshakeStatus.SHAKING
+            else:
+                self._shaking_start_time = None
+        else:
+            self._shaking_start_time = None
 
         self.debug(f"handshake_status: {handshake_status}")
         return handshake_status
