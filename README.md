@@ -20,9 +20,9 @@ Connect a camera to your machine. It is used to determine the player's move.
 
 You can optionally use a virtualenv or Conda environment.
 
-1. Install Python version 3
-2. `pip install -r requirements.txt`
-3. `python main.py`
+1. Install `uv` (https://docs.astral.sh/uv/getting-started/installation)
+2. `uv sync --locked`
+3. `uv run rock-paper-ai`
 
 ## AI strategies
 

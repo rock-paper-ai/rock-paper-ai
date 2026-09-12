@@ -17,3 +17,4 @@ __pycache__
 game_play_logs/*.json
 
 *.mp3
+*.task

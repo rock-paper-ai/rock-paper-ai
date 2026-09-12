@@ -1,20 +1,19 @@
 import json
 import math
 import os
+import random
+import threading
 import time
 from enum import Enum
 
 import cv2
 import cvzone
-from cvzone.HandTrackingModule import HandDetector
-import random
-from gtts import gTTS
-import os
-import threading
 import numpy as np
-from handshake_detector import HandshakeDetector, HandshakeStatus
-import random
+from cvzone.HandTrackingModule import HandDetector
+from gtts import gTTS
 from pygame import mixer
+
+from rock_paper_ai.handshake_detector import HandshakeDetector, HandshakeStatus
 
 
 def speak_text(text):
@@ -52,7 +51,7 @@ rounds = -1
 markov_chain_matrix = np.zeros((3, 3, 3), dtype=int)
 
 
-def get_player_move(hands, hand_detector) -> Move:
+def get_player_move(hands, hand_detector) -> Move | None:
     player_move = None
     hand = hands[0]
     fingers = hand_detector.fingersUp(hand)
@@ -132,7 +131,7 @@ def update_move_ui(playboard, player_move, ai_move, game_status):
 
     if game_status == GameStatus.RUNNING_SHAKING:
         # Display robot shaking animation
-        ai_move_image = cv2.imread(f'resources/ROCK.png', cv2.IMREAD_UNCHANGED)
+        ai_move_image = cv2.imread('resources/ROCK.png', cv2.IMREAD_UNCHANGED)
         y_shift = int(math.sin(ai_hand_shaking_frame_idx * 0.4) * 50)
         playboard = cvzone.overlayPNG(playboard, ai_move_image, (160, 260 + y_shift))
         ai_hand_shaking_frame_idx += 1
@@ -275,7 +274,7 @@ def main():
     while True:
         playboard = cv2.imread('resources/BG.png')  # background
 
-        success, camera_img = vc.read()
+        _, camera_img = vc.read()
         camera_img_scaled = cv2.resize(camera_img, (0, 0), None, 0.875, 0.875)
         camera_img_scaled = cv2.flip(camera_img_scaled, 1)
         camera_img_scaled = camera_img_scaled[:, 80:480]  # crop so that it fits to the box
@@ -350,18 +349,17 @@ def main():
 
         cv2.imshow('BG', playboard)
 
-        if game_status == GameStatus.NOT_RUNNING:
-            if is_key_pressed():
-                game_status = GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN
-                x = threading.Thread(target=speak_text, args=("Let's play!",))
-                x.start()
+        if game_status == GameStatus.NOT_RUNNING and is_key_pressed():
+            game_status = GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN
+            x = threading.Thread(target=speak_text, args=("Let's play!",))
+            x.start()
 
         last_frame_key_pressed = False
         pressed_key = cv2.pollKey()
         if pressed_key & 0xFF == ord('q'):
             break
         elif pressed_key != -1:
-            print(f"A non-q key was pressed")
+            print("A non-q key was pressed")
             last_frame_key_pressed = True
 
 
