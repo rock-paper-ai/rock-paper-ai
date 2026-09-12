@@ -45,6 +45,11 @@ ai_hand_shaking_frame_idx = 0
 scores = [0, 0]
 rounds = -1
 
+SPEECH_TEXTS_GAME_START = ['Lets play!', 'See if you can beat me!', 'Ready to play?', 'Lets go!', 'Game on!']
+SPEECH_TEXTS_AI_LOST = ['You won!', 'Keep going!', 'Nice one!', 'Well done!', 'Wow!', 'Impressive!', 'Good job!', 'Fantastic!']
+SPEECH_TEXTS_AI_WON = ['Haha you lost!', 'Level up your game!', 'Maybe next time?', 'Cant beat me!', 'Nice try!', 'Victory is mine!', 'Too easy!']
+SPEECH_TEXTS_TIE = ['Great minds think alike', 'That\'s a tie!', 'Its a draw!', 'Same choice!', 'We match!', 'No winner this time!']
+
 # Dimension 0: 3 previous player moves (rock, paper, scissors)
 # Dimension 1: 3 previous AI moves (rock, paper, scissors)
 # Dimension 2: 3 next player moves (rock, paper, scissors)
@@ -253,10 +258,6 @@ def is_key_pressed():
 def main():
     global ai_hand_shaking_frame_idx, scores, last_frame_key_pressed, rounds
 
-    speech_texts_ai_lost = ['You won!', 'Keep going!', 'Nice one!', 'Well done!', 'Wow!', 'Impressive!', 'Good job!', 'Fantastic!']
-    speech_texts_ai_won = ['Haha you lost!', 'Level up your game!', 'Maybe next time?', 'Cant beat me!', 'Nice try!', 'Victory is mine!', 'Too easy!']
-    speech_texts_tie = ['Great minds think alike', 'Tie!', 'Its a draw!', 'Same choice!', 'We match!', 'No winner this time!']
-
     vc = cv2.VideoCapture(0)
     vc.set(3, 640)
     vc.set(4, 480)
@@ -306,19 +307,16 @@ def main():
                         if rounds % 3 == 0:
                             ai_text = ''
                             if player_won == 1:
-                                i = random.randint(0, len(speech_texts_ai_lost)-1)
-                                ai_text = speech_texts_ai_lost[i]
+                                ai_text = random.choice(SPEECH_TEXTS_AI_LOST)
                                 x = threading.Thread(target=speak_text, args=(ai_text,))
                                 x.start()
                             elif player_won == -1:
-                                i = random.randint(0, len(speech_texts_ai_won)-1)
-                                ai_text = speech_texts_ai_won[i]
+                                ai_text = random.choice(SPEECH_TEXTS_AI_WON)
                                 x = threading.Thread(target=speak_text, args=(ai_text,))
                                 #x = threading.Thread(target=speak_text, args=(f"HA HA, I WON",))
                                 x.start()
                             else:
-                                i = random.randint(0, len(speech_texts_tie)-1)
-                                ai_text = speech_texts_tie[0]
+                                ai_text = random.choice(SPEECH_TEXTS_TIE)
                                 x = threading.Thread(target=speak_text, args=(ai_text,))
                                 #x = threading.Thread(target=speak_text, args=(f"Great minds think alike.",))
                                 x.start()
@@ -351,7 +349,8 @@ def main():
 
         if game_status == GameStatus.NOT_RUNNING and is_key_pressed():
             game_status = GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN
-            x = threading.Thread(target=speak_text, args=("Let's play!",))
+            ai_text = random.choice(SPEECH_TEXTS_GAME_START)
+            x = threading.Thread(target=speak_text, args=(ai_text,))
             x.start()
 
         last_frame_key_pressed = False
