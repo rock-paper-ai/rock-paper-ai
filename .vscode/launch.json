@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run rock-paper-ai (uv)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/rock_paper_ai/main.py",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}
