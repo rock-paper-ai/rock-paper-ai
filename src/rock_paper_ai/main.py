@@ -347,7 +347,7 @@ def main():
 
         playboard = update_score_ui(playboard, scores)
 
-        cv2.imshow('BG', playboard)
+        cv2.imshow('Rock Paper AI', playboard)
 
         if game_status == GameStatus.NOT_RUNNING and is_key_pressed():
             game_status = GameStatus.RUNNING_WAITING_FOR_SHAKE_BEGIN
