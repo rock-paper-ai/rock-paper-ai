@@ -45,10 +45,10 @@ ai_hand_shaking_frame_idx = 0
 scores = [0, 0]
 rounds = -1
 
-SPEECH_TEXTS_GAME_START = ['Lets play!', 'See if you can beat me!', 'Ready to play?', 'Lets go!', 'Game on!']
-SPEECH_TEXTS_AI_LOST = ['You won!', 'Keep going!', 'Nice one!', 'Well done!', 'Wow!', 'Impressive!', 'Good job!', 'Fantastic!']
-SPEECH_TEXTS_AI_WON = ['Haha you lost!', 'Level up your game!', 'Maybe next time?', 'Cant beat me!', 'Nice try!', 'Victory is mine!', 'Too easy!']
-SPEECH_TEXTS_TIE = ['Great minds think alike', 'That\'s a tie!', 'Its a draw!', 'Same choice!', 'We match!', 'No winner this time!']
+SPEECH_TEXTS_GAME_START = ['Lets play!', 'See if you can beat me!', 'Ready to play?', 'Lets go!', 'Game on!', 'Bring it on!', 'Show me what you got!', 'Lets do this!', 'I am ready!', 'Rock paper scissors, go!']
+SPEECH_TEXTS_AI_LOST = ['You won!', 'Keep going!', 'Nice one!', 'Well done!', 'Wow!', 'Impressive!', 'Good job!', 'Fantastic!', 'Beginners luck!', 'Okay, you got me!', 'Not bad at all!', 'Respect!']
+SPEECH_TEXTS_AI_WON = ['Haha you lost!', 'Level up your game!', 'Maybe next time?', 'Cant beat me!', 'Nice try!', 'Victory is mine!', 'Too easy!', 'Better luck next time!', 'I saw that coming!', 'Is that your best?', 'Gotcha!', 'Robots are unbeatable!']
+SPEECH_TEXTS_TIE = ['Great minds think alike', 'That\'s a tie!', 'Its a draw!', 'Same choice!', 'We match!', 'No winner this time!', 'Snap!', 'We are evenly matched!', 'Again!', 'So close!']
 
 # Dimension 0: 3 previous player moves (rock, paper, scissors)
 # Dimension 1: 3 previous AI moves (rock, paper, scissors)
